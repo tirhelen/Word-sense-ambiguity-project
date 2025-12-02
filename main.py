@@ -61,11 +61,14 @@ def evaluate_predictions(predictions, correct_labels, word1, word2):
 
 if __name__ == "__main__":
 
+    word1 = "love"
+    word2 = "hate"
+    combined = word1 + word2
     corpus_dir = "./Corpus-spell-AP88"
     corpus = load_corpus(corpus_dir)
-    synthetic_corpus = create_synthetic_corpus(corpus, "car", "speech")
-    seeds = pick_seeds(synthetic_corpus,"car","speech")
-    instances = extract_instances(synthetic_corpus, "carspeech")
+    synthetic_corpus = create_synthetic_corpus(corpus, word1, word2)
+    seeds = pick_seeds(synthetic_corpus,word1,word2)
+    instances = extract_instances(synthetic_corpus, combined)
 
     seeds, decision_list = bootstrap(
         seeds,
@@ -85,5 +88,5 @@ if __name__ == "__main__":
 
     # Evaluation
     predictions = [sense for sense, llr in labels]
-    corrects = get_correct_labels(instances, "car", "speech")
-    evaluate_predictions(predictions, corrects, word1="car", word2="speech")
+    corrects = get_correct_labels(instances, word1, word2)
+    evaluate_predictions(predictions, corrects, word1, word2)
