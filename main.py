@@ -17,6 +17,33 @@ def load_corpus(corpus_dir):
         documents.append(tokenize(text))
     return documents
 
+def create_synthetic_corpus(corpus, word1, word2):
+    ''''Turns the original corpus into synthetic one with
+    the synthetic ambiguous word (combined word 1 and word 2)'''
+    
+    combined = word1 + word2
+    synthetic = []
+    
+    for document in corpus:
+        new_document = []
+        # Go through the original corpus.
+        for token in document:
+            # If the word/token in original corpus is word 1 in the combined word,
+            # we add the combined word to the synthetic corpus and mark that it originated from word 1.
+            if token == word1:
+                new_document.append(combined)
+                new_document.append(f"ORIGINAL={word1}")
+            # Same with word 2
+            elif token == word2:
+                new_document.append(combined)
+                new_document.append(f"ORIGINAL={word2}")
+            # Otherwise, we keep the token/word as it is.
+            else:
+                new_document.append(token)
+        synthetic.append(new_document)
+    
+    return synthetic
+
 def pick_seeds(corpus, word1, word2, k=5):
     seeds = []
     combined_word = word1 + word2
@@ -47,5 +74,6 @@ def pick_seeds(corpus, word1, word2, k=5):
 if __name__ == "__main__":
     corpus_dir = "./Corpus-spell-AP88"
     corpus = load_corpus(corpus_dir)
-    print(pick_seeds(corpus,"car","speech"))
+    synthetic_corpus = create_synthetic_corpus(corpus, "car", "speech")
+    print(pick_seeds(synthetic_corpus,"car","speech"))
     
