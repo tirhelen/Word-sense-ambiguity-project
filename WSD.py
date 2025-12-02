@@ -78,7 +78,7 @@ def collect_collocations(instance):
     """
 
     left, target, right = instance
-    # Filter out markers 
+    # Filter out markers HUOM: If you are trying this out, and the code crashes, comment these two out and it should work
     left = [w for w in left if not w.startswith("ORIGINAL=")]
     right = [w for w in right if not w.startswith("ORIGINAL=")]
 
