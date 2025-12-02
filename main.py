@@ -18,9 +18,10 @@ def load_corpus(corpus_dir):
     return documents
 
 def create_synthetic_corpus(corpus, word1, word2):
-    ''''Turns the original corpus into synthetic one with
-    the synthetic ambiguous word (combined word 1 and word 2)'''
-    
+    ''''Given original corpus and two words to ambiguate,
+    return synthetic corpus with the synthetic ambiguous word
+    (combined word 1 and word 2)'''
+
     combined = word1 + word2
     synthetic = []
     
@@ -70,10 +71,56 @@ def pick_seeds(corpus, word1, word2, k=5):
                         break
     return seeds
 
+def collect_collocations(instance):
+    """
+    Given an instance (left_context, word, right_context),
+    return a list of collocation features.
+    """
+    left, target, right = instance
+    labels = ["L1", "R1", "LEFT_WINDOW", "RIGHT_WINDOW", "BIGRAM_LEFT", "BIGRAM_RIGHT", "TRIGRAM_LEFT", "TRIGRAM_RIGHT"]
+    features = {label: [] for label in labels} 
+
+    # Left and right neighbour words
+
+    if len(left) >= 1:
+        features["L1"].append(left[-1])
+    if len(right) >= 1:
+        features["R1"].append(right[0])
+
+    # Words found in +-k windows (k defined when we use pick_seeds)
+
+    for word in left:
+        features["LEFT_WINDOW"].append(word)
+    for word in right:
+        features["RIGHT_WINDOW"].append(word)
+    
+    # Bigrams
+
+    if len(left) >= 1:
+        features["BIGRAM_LEFT"].append((left[-1], target))
+    if len(right) >= 1:
+        features["BIGRAM_RIGHT"].append((target, right[0]))
+
+    # Trigrams
+    
+    if len(left) >= 2:
+        features["TRIGRAM_LEFT"].append((left[-2], left[-1], target))
+    if len(right) >= 2:
+        features["TRIGRAM_RIGHT"].append((target, right[0], right[1]))
+
+    return features
 
 if __name__ == "__main__":
     corpus_dir = "./Corpus-spell-AP88"
     corpus = load_corpus(corpus_dir)
     synthetic_corpus = create_synthetic_corpus(corpus, "car", "speech")
-    print(pick_seeds(synthetic_corpus,"car","speech"))
+    pick_seeds(synthetic_corpus,"car","speech")
+
+    instance = (
+    ["the", "shiny", "new"], "carspeech", ["engine", "tires"]
+    )
+
+    features = collect_collocations(instance)
+    print(features)
+
     
