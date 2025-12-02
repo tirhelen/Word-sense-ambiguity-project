@@ -110,17 +110,70 @@ def collect_collocations(instance):
 
     return features
 
+def count_features(seeds, features):
+    """
+    Counts how many times each feature occurs in seeds.
+    Returns a dictionary of the counts.
+    """
+    feature_counts = {}
+
+    for instance, sense in seeds:
+        for feature_list in features.values():
+            for feature in feature_list:
+                if feature not in feature_counts:
+                    feature_counts[feature] = {0: 0, 1: 0} # First sense (word 1) indicated by 0, second sense (word 2) indicated by 1 
+                feature_counts[feature][sense] += 1
+
+    return feature_counts
+
+
+def create_decision_list(feature_counts):
+    """
+    Creates a sorted decision list which consists of tuples
+    (feature, predicted sense, log-likehood score).
+    """
+
+    decision_list = []
+
+    for feature, counts in feature_counts.items():
+        # Extracting the sense counts
+        c0 = counts.get(0, 0)
+        c1 = counts.get(1, 0)
+
+        # Avoid division by zero and skip features that don't appear
+        if c0 == 0 and c1 == 0:
+            continue
+
+        # Laplace smoothing
+        p0 = (c0 + 1) / (c0 + c1 + 2)
+        p1 = (c1 + 1) / (c0 + c1 + 2)
+
+        # Log-likelihood ratio
+        llr = math.log2(p0 / p1)
+
+        # Predict the sense with higher probability
+        predicted_sense = 0 if p0 > p1 else 1
+
+        decision_list.append((feature, predicted_sense, llr))
+
+    # Sort by absolute strength of evidence
+    decision_list.sort(key=lambda x: abs(x[2]), reverse=True)
+
+    return decision_list
+
 if __name__ == "__main__":
     corpus_dir = "./Corpus-spell-AP88"
     corpus = load_corpus(corpus_dir)
     synthetic_corpus = create_synthetic_corpus(corpus, "car", "speech")
-    pick_seeds(synthetic_corpus,"car","speech")
+    seeds = pick_seeds(synthetic_corpus,"car","speech")
 
     instance = (
-    ["the", "shiny", "new"], "carspeech", ["engine", "tires"]
+    ["tongue", "mouth"], "carspeech", ["inspiring", "text"]
     )
 
     features = collect_collocations(instance)
-    print(features)
+    #print(features)
+    feature_counts = count_features(seeds, features)
+    print(create_decision_list(feature_counts))
 
     
