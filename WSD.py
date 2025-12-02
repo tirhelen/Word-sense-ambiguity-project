@@ -76,7 +76,12 @@ def collect_collocations(instance):
     Given an instance (left_context, word, right_context),
     return a list of collocation features.
     """
+
     left, target, right = instance
+    # Filter out markers 
+    left = [w for w in left if not w.startswith("ORIGINAL=")]
+    right = [w for w in right if not w.startswith("ORIGINAL=")]
+
     labels = ["L1", "R1", "LEFT_WINDOW", "RIGHT_WINDOW", "BIGRAM_LEFT", "BIGRAM_RIGHT", "TRIGRAM_LEFT", "TRIGRAM_RIGHT"]
     features = {label: [] for label in labels} 
 
