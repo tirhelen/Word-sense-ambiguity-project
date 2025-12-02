@@ -110,7 +110,7 @@ def collect_collocations(instance):
 
     return features
 
-def count_features(seeds, features):
+def count_features(seeds):
     """
     Counts how many times each feature occurs in seeds.
     Returns a dictionary of the counts.
@@ -118,6 +118,7 @@ def count_features(seeds, features):
     feature_counts = {}
 
     for instance, sense in seeds:
+        features = collect_collocations(instance)
         for feature_list in features.values():
             for feature in feature_list:
                 if feature not in feature_counts:
@@ -161,6 +162,55 @@ def create_decision_list(feature_counts):
 
     return decision_list
 
+def extract_instances(corpus, combined_word, k=5):
+    '''Extracts instances from given corpus, returns a list of instances
+    that are tuples.
+    '''
+
+    instances = []
+
+    for document in corpus:
+        tokens = document
+        # Similarly as in pick_seeds
+        for i, token in enumerate(tokens):
+            if token == combined_word:
+                left = tokens[max(0, i-k): i]
+                right = tokens[i+1 : i+k+1]
+                instances.append((left, token, right))
+
+    return instances
+
+def label_instance(instance, decision_list):
+    """
+    Labels given instance based on given decision list,
+    returns predicted sense or None.
+    """
+    features = collect_collocations(instance)
+
+    # Go through sorted decision list
+    for feature, predicted_sense, llr in decision_list:
+        # Go through all feature lists
+        for feat_list in features.values():
+            if feature in feat_list:
+                return predicted_sense, llr
+
+    # No matching rule
+    return None, 0
+
+def label_corpus(instances, decision_list):
+    """
+    Labels whole corpus of instances.
+    """
+
+    labels = []
+
+    for instance in instances:
+        sense, llr = label_instance(instance, decision_list)
+        labels.append((sense,llr))
+
+    return labels
+
+
 if __name__ == "__main__":
     corpus_dir = "./Corpus-spell-AP88"
     corpus = load_corpus(corpus_dir)
@@ -173,7 +223,11 @@ if __name__ == "__main__":
 
     features = collect_collocations(instance)
     #print(features)
-    feature_counts = count_features(seeds, features)
-    print(create_decision_list(feature_counts))
+    feature_counts = count_features(seeds)
+    decision_list = create_decision_list(feature_counts)
+    vorpus = extract_instances(synthetic_corpus, "carspeech")
+    for inst, label in zip(vorpus[:10], label_corpus(vorpus, decision_list)[:10]):
+        print("Instance:", inst)
+        print("Label:", label)
+        print()
 
-    
